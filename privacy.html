@@ -4,17 +4,32 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>하루마감 개인정보처리방침</title>
-<style>
-  body{font-family:-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;max-width:760px;margin:0 auto;padding:24px 18px 60px;line-height:1.7;color:#191f28;background:#fff}
-  h1{font-size:26px} h2{font-size:19px;margin-top:32px} table{border-collapse:collapse;width:100%;margin:8px 0} td,th{border:1px solid #e5e8eb;padding:8px;text-align:left;vertical-align:top} th{background:#f2f4f6}
-  .note{background:#e3f6ee;border-radius:10px;padding:12px 14px}
-</style>
+<meta name="theme-color" content="#131619">
+<link rel="icon" href="assets/icon-64.png" type="image/png" sizes="64x64">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="pages.css">
 </head>
 <body>
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="./" aria-label="NOA ENGIN 처음으로">
+      <img class="mark" src="assets/logo-mark-600.png" width="44" height="31" alt="">
+      <span class="word">NOA <b>ENGIN</b></span>
+    </a>
+    <nav aria-label="주요 메뉴">
+      <a href="./#haru">하루마감</a>
+      <a href="./#contact">문의</a>
+    </nav>
+  </div>
+</header>
+<main class="doc wrap">
 <h1>「하루마감」 개인정보처리방침</h1>
 <p>시행일: 2026년 11월 15일 · 개발자: NOA ENGIN · 문의: noaengine.app@gmail.com</p>
 
-<p class="note"><b>요약</b> — 모든 기록과 보고서는 이용자의 휴대폰 안에만 암호화해 저장하고, <b>AI 분석도 휴대폰 안에서</b> 합니다. 개발자를 포함한 누구에게도 개인정보를 전송·제공하지 않습니다. 인터넷은 AI 모델 파일(오픈소스)을 처음 내려받을 때만 사용합니다.</p>
+<p class="note"><b>요약</b> — 모든 기록과 보고서는 이용자의 휴대폰 안에만 암호화해 저장하고, <b>AI 분석도 휴대폰 안에서</b> 합니다. 개발자를 포함한 누구에게도 개인정보를 전송·제공하지 않습니다. 인터넷은 AI 모델 파일(오픈소스)을 처음 내려받을 때와, 이용자가 홈 화면 날씨 지역을 고른 경우 그 도시의 날씨를 받을 때만 사용합니다.</p>
 
 <h2>1. 처리하는 정보와 목적</h2>
 <p>이용자가 설정에서 직접 켠 항목만 휴대폰에 기록하며, 목적은 이용자가 '오늘 하루 마무리'를 눌렀을 때 하루 보고서(요약·할 일·일정 후보·추천 계획)를 만드는 것뿐입니다.</p>
@@ -28,6 +43,7 @@
 <p>각 항목은 이용자가 앱 안의 안내를 읽고 동의한 뒤 Android 권한을 허용해야만 기록이 시작됩니다. 인증번호·비밀번호·카드/계좌번호 등으로 보이는 내용은 저장하지 않습니다.</p>
 <h2>1-1. 휴대폰 안 AI 분석</h2>
 <p>AI 보고서는 이용자의 휴대폰 안에서 오픈소스 AI 모델(Qwen3.5 4B, Apache-2.0)로 만듭니다. AI 엔진은 휴대폰 내부(127.0.0.1)에서만 동작하며 기록을 외부로 보내지 않습니다.</p>
+<p><b>홈 화면 날씨(선택)</b> — 이용자가 설정에서 도시(예: 서울)를 고르면, 그 도시의 격자 좌표(시청 부근)만 대한민국 기상청(공공데이터포털 초단기예보)에 보내 지금 날씨를 받습니다. 서비스 키를 쓸 수 없는 경우에는 같은 도시의 대략적인 좌표(소수 둘째 자리)만 노르웨이 기상청(MET Norway) 날씨 서비스에 보내 대신 받을 수 있습니다. 위치 권한·GPS는 사용하지 않으며, 기록·보고서·이름 등 개인정보는 보내지 않습니다. 받은 날씨는 휴대폰에 1시간 동안만 보관하고, 도시를 고르지 않으면 아무 요청도 하지 않습니다. 날씨 데이터 출처: 대한민국 기상청(공공데이터포털), 대체 시 MET Norway(CC BY 4.0).</p>
 <ul>
 <li><b>마무리 분석</b>: 이용자가 '오늘 하루 마무리'를 누르면 그 순간까지의 기록으로 AI 보고서를 만듭니다(진행 중에는 알림을 표시합니다).</li>
 <li><b>통화 직후 요약</b>(프로, 설정에서 켜고 끔): 새 통화 녹음이 생기면 휴대폰 안에서 받아 적고 AI로 짧게 요약해 알림으로 보여 줍니다. 기본은 충전 중일 때만 동작합니다. 녹음·글·요약은 휴대폰 밖으로 보내지 않습니다.</li>
@@ -60,5 +76,20 @@
 
 <h2>7. 문의</h2>
 <p>개인정보 관련 문의: NOA ENGIN · noaengine.app@gmail.com</p>
+</main>
+<footer class="foot">
+  <div class="wrap foot-grid">
+    <div>
+      <p class="foot-brand">NOA ENGIN</p>
+      <p class="foot-slogan">기술은 깊게, 일상은 가볍게.</p>
+    </div>
+    <div class="foot-links">
+      <a href="privacy.html">개인정보처리방침</a>
+      <a href="mailto:noaengine.app@gmail.com">문의</a>
+    </div>
+    <p class="copy">© NOA ENGIN. All rights reserved.</p>
+  </div>
+</footer>
 </body>
+
 </html>
