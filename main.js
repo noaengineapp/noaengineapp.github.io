@@ -35,8 +35,8 @@
   }
 
   /*
-   * CSS 애니메이션은 어떤 JS 초기화 클래스도 기다리지 않는다.
-   * 아래 스크롤 효과 또한 콘텐츠를 미리 숨기지 않는다.
+   * 기존 콘텐츠는 항상 표시한다.
+   * 진입 효과만 추가하고 첫 화면의 동작은 유지한다.
    */
   const revealTargets = Array.from(document.querySelectorAll("[data-reveal]"));
   const seen = new WeakSet();
@@ -92,10 +92,6 @@
     }
   }
 
-  /*
-   * 직접 위치 검사도 병행한다.
-   * Observer가 늦게 반응하거나 지원되지 않아도 진입 효과가 실행된다.
-   */
   window.addEventListener("scroll", queueReveals, { passive: true });
   queueReveals();
 
@@ -362,8 +358,242 @@
   });
 
   /*
+   * 하루마감 전용 3D 카드 덱.
+   * JS가 없으면 기본 CSS의 전체 화면 목록을 그대로 사용한다.
+   * reduced-motion 변경 시 즉시 기본 목록으로 돌아간다.
+   */
+  const showcase = document.querySelector("#haru .haru-showcase");
+
+  if (showcase) {
+    const gallery = showcase.querySelector(".haru-stage");
+    const screens = Array.from(showcase.querySelectorAll(".haru-screen"));
+    const controls = showcase.querySelector(".haru-controls");
+    const dots = Array.from(showcase.querySelectorAll(".haru-dot"));
+    const play = showcase.querySelector(".haru-play");
+    const help = showcase.querySelector(".haru-gallery-help");
+    const announcement = showcase.querySelector(".haru-announcement");
+    const names = ["01 홈", "02 보고서", "03 캘린더"];
+    const dwell = 5600;
+    const turnDuration = 1100;
+
+    if (gallery && screens.length === 3 && controls && dots.length === 3 && play && help) {
+      let active = 0;
+      let enabled = false;
+      let inView = false;
+      let hovered = false;
+      let focused = false;
+      let userPaused = false;
+      let changing = false;
+      let autoTimer = 0;
+      let turnTimer = 0;
+      let visibilityFrame = 0;
+      let galleryObserver = null;
+
+      const clearAuto = () => {
+        window.clearTimeout(autoTimer);
+        autoTimer = 0;
+      };
+
+      const cleanTransition = () => {
+        window.clearTimeout(turnTimer);
+        turnTimer = 0;
+        changing = false;
+        screens.forEach((screen) => {
+          screen.classList.remove("haru-turning", "haru-arriving");
+        });
+      };
+
+      const canRun = () =>
+        enabled && inView && !document.hidden && !reduced.matches &&
+        !hovered && !focused && !userPaused;
+
+      const paint = () => {
+        screens.forEach((screen, index) => {
+          const offset = (index - active + screens.length) % screens.length;
+          screen.dataset.position = ["front", "next", "back"][offset];
+          if (enabled && index !== active) screen.setAttribute("aria-hidden", "true");
+          else screen.removeAttribute("aria-hidden");
+        });
+        dots.forEach((dot, index) => {
+          dot.setAttribute("aria-pressed", String(index === active));
+        });
+      };
+
+      const schedule = () => {
+        clearAuto();
+        if (!canRun() || changing) return;
+        autoTimer = window.setTimeout(() => {
+          autoTimer = 0;
+          if (canRun()) select((active + 1) % screens.length, false);
+        }, dwell);
+      };
+
+      const syncPlayback = () => {
+        showcase.classList.toggle("haru-paused", !canRun());
+        play.textContent = userPaused ? "자동 전환 재생" : "자동 전환 일시정지";
+        play.setAttribute("aria-pressed", String(userPaused));
+        schedule();
+      };
+
+      const select = (index, manual) => {
+        if (!enabled || reduced.matches || changing) return;
+        if (index === active) {
+          schedule();
+          return;
+        }
+
+        clearAuto();
+        cleanTransition();
+        const outgoing = screens[active];
+        active = index;
+        changing = true;
+        paint();
+
+        outgoing.classList.add("haru-turning");
+        screens[active].classList.add("haru-arriving");
+
+        if (manual && announcement) {
+          announcement.textContent = `${names[active]} 예시 화면을 표시합니다.`;
+        }
+
+        turnTimer = window.setTimeout(() => {
+          cleanTransition();
+          syncPlayback();
+        }, turnDuration);
+      };
+
+      const enable = () => {
+        if (enabled || reduced.matches) return;
+        enabled = true;
+        paint();
+        controls.hidden = false;
+        help.hidden = false;
+        showcase.classList.add("haru-deck");
+        showcase.classList.add("haru-paused");
+        syncPlayback();
+      };
+
+      const disable = () => {
+        clearAuto();
+        cleanTransition();
+        enabled = false;
+        showcase.classList.remove("haru-deck", "haru-paused");
+        controls.hidden = true;
+        help.hidden = true;
+        screens.forEach((screen) => {
+          screen.removeAttribute("aria-hidden");
+          delete screen.dataset.position;
+        });
+        if (announcement) announcement.textContent = "";
+      };
+
+      const measureVisibility = () => {
+        visibilityFrame = 0;
+        const rect = gallery.getBoundingClientRect();
+        const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+        const next = visibleHeight > Math.min(rect.height, window.innerHeight) * .25;
+        if (inView !== next) {
+          inView = next;
+          if (!inView) cleanTransition();
+          syncPlayback();
+        }
+      };
+
+      const queueVisibility = () => {
+        if (!visibilityFrame) {
+          visibilityFrame = requestAnimationFrame(measureVisibility);
+        }
+      };
+
+      dots.forEach((dot, index) => {
+        dot.addEventListener("click", () => select(index, true));
+      });
+
+      play.addEventListener("click", () => {
+        userPaused = !userPaused;
+        syncPlayback();
+      });
+
+      showcase.addEventListener("pointerenter", (event) => {
+        if (event.pointerType !== "mouse" || !finePointer.matches) return;
+        hovered = true;
+        syncPlayback();
+      });
+
+      showcase.addEventListener("pointerleave", (event) => {
+        if (event.pointerType !== "mouse") return;
+        hovered = false;
+        syncPlayback();
+      });
+
+      showcase.addEventListener("focusin", () => {
+        focused = true;
+        syncPlayback();
+      });
+
+      showcase.addEventListener("focusout", () => {
+        window.setTimeout(() => {
+          focused = showcase.contains(document.activeElement);
+          syncPlayback();
+        }, 0);
+      });
+
+      controls.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        userPaused = true;
+        syncPlayback();
+      });
+
+      if ("IntersectionObserver" in window) {
+        try {
+          galleryObserver = new IntersectionObserver(() => {
+            measureVisibility();
+          }, { threshold: [0, .25, .5, .75, 1] });
+          galleryObserver.observe(gallery);
+        } catch {
+          galleryObserver = null;
+        }
+      }
+
+      window.addEventListener("scroll", queueVisibility, { passive: true });
+      window.addEventListener("resize", queueVisibility, { passive: true });
+      window.addEventListener("pageshow", () => {
+        measureVisibility();
+        syncPlayback();
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          clearAuto();
+          cleanTransition();
+          showcase.classList.add("haru-paused");
+        } else {
+          measureVisibility();
+          syncPlayback();
+        }
+      });
+
+      watch(finePointer, () => {
+        hovered = false;
+        syncPlayback();
+      });
+
+      watch(reduced, () => {
+        if (reduced.matches) disable();
+        else {
+          enable();
+          measureVisibility();
+        }
+      });
+
+      if (!reduced.matches) enable();
+      measureVisibility();
+    }
+  }
+
+  /*
    * 첫 화면은 Observer 콜백 없이 바로 시작한다.
-   * Canvas가 실패해도 SVG 네트워크와 모든 CSS 애니메이션은 유지된다.
+   * Canvas가 실패해도 SVG 네트워크와 CSS 애니메이션은 유지한다.
    */
   syncVisibility();
 })();
